@@ -67,8 +67,8 @@ case "$TARGET_OS" in
     PLATFORM=OS_LINUX
     ;;
   *)
-    echo "Unknown platform!" >&2
-    exit 1
+    PLATFORM=OS_GENERIC_UNIX
+    ;;
 esac
 
 #
