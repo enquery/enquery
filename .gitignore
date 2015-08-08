@@ -1,0 +1,24 @@
+# Don't track the following files:
+
+## Build configuration files
+build_config.mk
+
+## Temporary files create by editors
+*~
+./*~
+.*.swp
+
+## Object files
+*.o
+
+# Tests
+*_test
+
+# Targets
+libenquery.a
+demo
+
+# Stuff that sometimes exists on OSX
+.DS_Store
+*/.DS_Store
+*.dSYM
