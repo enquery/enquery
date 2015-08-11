@@ -41,7 +41,7 @@ include build_config.mk
 CXXFLAGS += -I. -I./include $(PLATFORM_CXXFLAGS) $(OPT) $(WARNINGFLAGS) $(FEATURES)
 BASE_OBJECTS = $(BASE_FILES:.cc=.o)
 HTTP_OBJECTS = $(HTTP_FILES:.cc=.o)
-TESTS = status_test
+TESTS = atomic_test shared_pointer_test shared_test status_test 
 
 DEV = demo
 
@@ -86,6 +86,18 @@ reformat:
 	clang-format -i $(CPPLINT_SOURCES)
 
 # Tests
+atomic_test: base/atomic_test.o $(BASE_OBJECTS)                                \
+	$(BASE_OBJECTS)
+	$(CXX) base/atomic_test.o $(BASE_OBJECTS)                                    \
+	$(LIBRARIES) -o $@
+
+shared_pointer_test: base/shared_pointer_test.o $(BASE_OBJECTS)
+	$(CXX) base/shared_pointer_test.o $(BASE_OBJECTS)                            \
+	$(LIBRARIES) -o $@
+
+shared_test: base/shared_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)
+	$(CXX) base/shared_test.o $(BASE_OBJECTS)	$(HTTP_OBJECTS) $(LIBRARIES) -o $@
+
 status_test: base/status_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)
 	$(CXX) base/status_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS) $(LIBRARIES) -o $@ 
 
