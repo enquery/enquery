@@ -41,8 +41,7 @@ include build_config.mk
 CXXFLAGS += -I. -I./include $(PLATFORM_CXXFLAGS) $(OPT) $(WARNINGFLAGS) $(FEATURES)
 BASE_OBJECTS = $(BASE_FILES:.cc=.o)
 HTTP_OBJECTS = $(HTTP_FILES:.cc=.o)
-TESTS = atomic_test shared_pointer_test shared_test status_test 
-
+TESTS = atomic_test futures_test shared_pointer_test shared_test status_test
 DEV = demo
 
 # Targets
@@ -89,6 +88,10 @@ reformat:
 atomic_test: base/atomic_test.o $(BASE_OBJECTS)                                \
 	$(BASE_OBJECTS)
 	$(CXX) base/atomic_test.o $(BASE_OBJECTS)                                    \
+	$(LIBRARIES) -o $@
+
+futures_test: base/futures_test.o $(BASE_OBJECTS)
+	$(CXX) base/futures_test.o $(BASE_OBJECTS)                                   \
 	$(LIBRARIES) -o $@
 
 shared_pointer_test: base/shared_pointer_test.o $(BASE_OBJECTS)
