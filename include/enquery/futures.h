@@ -65,6 +65,7 @@ class CallbackQueue {
     }
   }
 
+  // TODO(tdial): this does not need to be a pointer.
   std::deque<Callback*>* callbacks_;
 };
 
