@@ -16,7 +16,7 @@
 #ifndef INCLUDE_ENQUERY_EXECUTOR_SERVICE_H_
 #define INCLUDE_ENQUERY_EXECUTOR_SERVICE_H_
 
-#include "futures.h"
+#include "enquery/futures.h"
 
 namespace enquery {
 
@@ -33,7 +33,8 @@ class ExecutionStrategy {
 template <typename ExecStrategy>
 class ExecutorService {
  public:
-  ExecutorService(ExecStrategy es) : exec_strategy_(es) {}
+  explicit ExecutorService(ExecStrategy es = ExecStrategy())
+      : exec_strategy_(es) {}
 
   template <typename ReturnType, typename A1>
   Future<ReturnType> submit(const A1& arg) {

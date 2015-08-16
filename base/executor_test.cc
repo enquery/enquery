@@ -17,11 +17,11 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include "enquery/executor_service.h"
+// #include "enquery/executor_service.h"
 #include "enquery/testing.h"
 
-//using ::enquery::ExecutorService;
-//using ::enquery::Future;
+// using ::enquery::ExecutorService;
+// using ::enquery::Future;
 
 int main(int argc, char* argv[]) {
   /*
