@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <algorithm>
 #include <deque>
+#include "enquery/shared.h"
 
 namespace enquery {
 
@@ -35,11 +36,11 @@ class CallbackQueue {
  public:
   CallbackQueue() { }
 
-  void Add(Callback* callback) { callbacks_.push_front(callback); }
-
   ~CallbackQueue() {
     Dispatch(false);
   }
+
+  void Add(Callback* callback) { callbacks_.push_front(callback); }
 
   void Execute() { Dispatch(true); }
 
@@ -110,26 +111,17 @@ class SharedValue {
   template <typename U>
   friend class Future;
 
-  SharedValue() : ready_(false), refcount_(1), value_(T()) {
+  SharedValue() : ready_(false), value_(T()) {
     pthread_mutex_init(&mutex_, NULL);
     pthread_cond_init(&cond_, NULL);
   }
 
-  void Up() {
-    pthread_mutex_lock(&mutex_);
-    ++refcount_;
-    pthread_mutex_unlock(&mutex_);
+  ~SharedValue() {
+    pthread_cond_destroy(&cond_);
+    pthread_mutex_destroy(&mutex_);
   }
 
-  void Down() {
-    pthread_mutex_lock(&mutex_);
-    int64_t newrefcount = --refcount_;
-    pthread_mutex_unlock(&mutex_);
-    if (newrefcount == 0) {
-      delete this;
-    }
-  }
-
+  // TODO(tdial): Should we allow multiple calls to Set()?
   void Set(const T& value) {
     pthread_mutex_lock(&mutex_);
     value_ = value;
@@ -140,7 +132,6 @@ class SharedValue {
     // Get() on a future without causing deadlock.
     CallbackQueue calls;
     callbacks_.swap(calls);
-
     pthread_cond_broadcast(&cond_);
     pthread_mutex_unlock(&mutex_);
     calls.Execute();
@@ -173,15 +164,9 @@ class SharedValue {
     }
   }
 
-  ~SharedValue() {
-    pthread_cond_destroy(&cond_);
-    pthread_mutex_destroy(&mutex_);
-  }
-
   pthread_mutex_t mutex_;
   pthread_cond_t cond_;
   bool ready_;
-  int64_t refcount_;
   T value_;
   CallbackQueue callbacks_;
 };
@@ -190,9 +175,7 @@ class SharedValue {
 template <typename T>
 class Future {
  public:
-  Future(const Future<T>& copy) : value_(copy.value_) {  // NOLINT
-    value_->Up();
-  }
+  Future(const Future<T>& copy) : value_(copy.value_) { }  // NOLINT
 
   Future<T>& operator=(const Future<T>& assign) {
     Future<T> tmp(assign);
@@ -200,7 +183,7 @@ class Future {
     return *this;
   }
 
-  ~Future() { value_->Down(); }
+  ~Future() { }
 
   T GetValue() { return value_->Get(); }
 
@@ -222,17 +205,13 @@ class Future {
  private:
   template <typename U>
   friend class Promise;
-  Future(SharedValue<T>* val) : value_(val) {  // NOLINT
-    value_->Up();
-  }
+  Future(Shared::Ptr<SharedValue<T> > val) : value_(val) { }  // NOLINT
 
   void swap(Future<T>& other) {
-    SharedValue<T>* tmp_value = other.value_;
-    other.value_ = this->value_;
-    this->value_ = tmp_value;
+    std::swap(value_, other.value_);
   }
 
-  SharedValue<T>* value_;
+  Shared::Ptr<SharedValue<T> > value_;
 };
 
 // Promise represents an obligation to set a value.
@@ -241,9 +220,7 @@ class Promise {
  public:
   Promise() : value_(new SharedValue<T>()) {}
 
-  Promise(const Promise<T>& copy) : value_(copy.value_) {  // NOLINT
-    value_->Up();
-  }
+  Promise(const Promise<T>& copy) : value_(copy.value_) { }  // NOLINT
 
   Promise& operator=(const Promise<T>& assign) {
     Promise tmp(assign);
@@ -251,7 +228,7 @@ class Promise {
     return *this;
   }
 
-  ~Promise() { value_->Down(); }
+  ~Promise() { }
 
   void SetValue(const T& val) { value_->Set(val); }
 
@@ -259,12 +236,10 @@ class Promise {
 
  private:
   void swap(Promise<T>& other) {
-    SharedValue<T>* tmp_value = other.value_;
-    other.value_ = this->value_;
-    this->value_ = tmp_value;
+    std::swap(value_, other.value_);
   }
 
-  SharedValue<T>* value_;
+  Shared::Ptr<SharedValue<T> > value_;
 };
 
 }  // namespace enquery
