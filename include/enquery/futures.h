@@ -33,21 +33,18 @@ class Callback {
 // Container used by Future to store callbacks to be invoked when populated.
 class CallbackQueue {
  public:
-  CallbackQueue() : callbacks_(new std::deque<Callback*>()) {}
+  CallbackQueue() { }
 
-  void Add(Callback* callback) { callbacks_->push_front(callback); }
+  void Add(Callback* callback) { callbacks_.push_front(callback); }
 
   ~CallbackQueue() {
     Dispatch(false);
-    delete callbacks_;
   }
 
   void Execute() { Dispatch(true); }
 
   void swap(CallbackQueue& other) {
-    std::deque<Callback*>* tmp = other.callbacks_;
-    other.callbacks_ = this->callbacks_;
-    this->callbacks_ = tmp;
+    std::swap(callbacks_, other.callbacks_);
   }
 
  private:
@@ -55,9 +52,9 @@ class CallbackQueue {
   CallbackQueue& operator=(const CallbackQueue& no_assign);
 
   void Dispatch(bool execute) {
-    while (callbacks_->size()) {
-      Callback* cb = callbacks_->back();
-      callbacks_->pop_back();
+    while (callbacks_.size()) {
+      Callback* cb = callbacks_.back();
+      callbacks_.pop_back();
       if (execute) {
         cb->Execute();
       }
@@ -65,8 +62,7 @@ class CallbackQueue {
     }
   }
 
-  // TODO(tdial): this does not need to be a pointer.
-  std::deque<Callback*>* callbacks_;
+  std::deque<Callback*> callbacks_;
 };
 
 template <typename F>
@@ -160,9 +156,9 @@ class SharedValue {
   }
 
   void Notify(Callback* callback) {
-    // Iff we're already in the ready state, we won't queue the callback;
-    // instead, we will save it and execute it immediately on the current
-    // thread after we leave the mutex. Otherwise, we queue it.
+    // If the the SharedValue has already been set, execute the callback
+    // immediately on the current thread. Otherwise, queue the callback
+    // for later execution, which occurs on the thread that calls Set().
     pthread_mutex_lock(&mutex_);
     Callback* tmp = NULL;
     if (ready_) {
