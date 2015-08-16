@@ -101,12 +101,7 @@ class Callback_2 : public Callback {
 // Shared representation used by Promise / Future to synchronize on value.
 template <typename T>
 class SharedValue {
-  template <typename U>
-  friend class Promise;
-
-  template <typename U>
-  friend class Future;
-
+ public:
   SharedValue() : ready_(false), value_(T()) {
     pthread_mutex_init(&mutex_, NULL);
     pthread_cond_init(&cond_, NULL);
@@ -201,11 +196,11 @@ class Future {
  private:
   template <typename U>
   friend class Promise;
-  Future(Shared::Ptr<SharedValue<T> > val) : value_(val) {}  // NOLINT
+  Future(typename Shared<SharedValue<T> >::Ptr val) : value_(val) {}  // NOLINT
 
   void swap(Future<T>& other) { std::swap(value_, other.value_); }
 
-  Shared::Ptr<SharedValue<T> > value_;
+  typename Shared<SharedValue<T> >::Ptr value_;
 };
 
 // Promise represents an obligation to set a value.
@@ -231,7 +226,7 @@ class Promise {
  private:
   void swap(Promise<T>& other) { std::swap(value_, other.value_); }
 
-  Shared::Ptr<SharedValue<T> > value_;
+  typename Shared<SharedValue<T> >::Ptr value_;
 };
 
 }  // namespace enquery
