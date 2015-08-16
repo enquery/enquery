@@ -22,12 +22,35 @@ namespace enquery {
 
 class Task {
  public:
-  virtual void Run() = 0;
+  virtual ~Task() {}
+  virtual void Invoke() = 0;
+};
+
+template <typename ReturnType, typename Func, typename A1>
+class Task_1 : public Task {
+ public:
+  Task_1(Promise<ReturnType> promise, Func func, A1 arg1)
+      : promise_(promise), func_(func), arg1_(arg1) {}
+  virtual void Invoke() { promise_.SetValue(func_(arg1_)); }
+
+ private:
+  Promise<ReturnType> promise_;
+  Func func_;
+  A1 arg1_;
 };
 
 class ExecutionStrategy {
  public:
+  virtual ~ExecutionStrategy() {}
   virtual void Execute(Task* task) = 0;
+};
+
+class CurrentThreadExecutionStrategy : public ExecutionStrategy {
+ public:
+  virtual void Execute(Task* task) {
+    task->Invoke();
+    delete task;
+  }
 };
 
 template <typename ExecStrategy>
@@ -36,9 +59,11 @@ class ExecutorService {
   explicit ExecutorService(ExecStrategy es = ExecStrategy())
       : exec_strategy_(es) {}
 
-  template <typename ReturnType, typename A1>
-  Future<ReturnType> submit(const A1& arg) {
+  template <typename ReturnType, typename Func, typename A1>
+  Future<ReturnType> submit(Func func, const A1& arg1) {
     Promise<ReturnType> promise;
+    Task* task = new Task_1<ReturnType, Func, A1>(promise, func, arg1);
+    exec_strategy_.Execute(task);
     return promise.GetFuture();
   }
 

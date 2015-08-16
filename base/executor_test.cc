@@ -17,19 +17,23 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-// #include "enquery/executor_service.h"
+#include "enquery/executor_service.h"
 #include "enquery/testing.h"
 
-// using ::enquery::ExecutorService;
-// using ::enquery::Future;
+using ::enquery::CurrentThreadExecutionStrategy;
+using ::enquery::ExecutorService;
+using ::enquery::Future;
+
+int negate(int x) { return -x; }
 
 int main(int argc, char* argv[]) {
-  /*
-  ASSERT_EQUALS(n0, k0);
-  ASSERT_EQUALS(n1_a, k1_a);
-  ASSERT_EQUALS(n2_a, k2_a);
-  ASSERT_EQUALS(n2_b, k2_b);
-  */
+  const int input_value = 42;
+
+  ExecutorService<CurrentThreadExecutionStrategy> executor;
+
+  Future<int> future_result = executor.submit<int>(negate, input_value);
+
+  ASSERT_EQUALS(future_result.GetValue(), negate(input_value));
 
   return EXIT_SUCCESS;
 }
