@@ -27,9 +27,9 @@ namespace enquery {
 
 // Windows uses the DWORD for system errors. UN*X uses int.
 #ifdef _WIN32
-  typedef DWORD errno_t;
+typedef DWORD errno_t;
 #else
-  typedef int errno_t;
+typedef int errno_t;
 #endif
 
 // Make a human-readable string from a system error number.

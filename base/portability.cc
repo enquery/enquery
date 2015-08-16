@@ -17,18 +17,18 @@
 #include <string.h>
 
 namespace enquery {
-  
+
 std::string SystemErrorToString(errno_t error_number) {
   const size_t kMaxErrorLen = 256;
 #ifdef _WIN32
   // Windows
-  TCHAR tmp[kMaxErrorLen]={0};
+  TCHAR tmp[kMaxErrorLen] = {0};
   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error_number, 0, tmp,
-    kMaxErrorLen, NULL);
+                kMaxErrorLen, NULL);
   return std::string(tmp);
 #else
   // UN*X
-  char tmp[kMaxErrorLen]={0};
+  char tmp[kMaxErrorLen] = {0};
 #if (((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !_GNU_SOURCE) || \
      __MACH__)
   strerror_r(error_number, tmp, kMaxErrorLen);

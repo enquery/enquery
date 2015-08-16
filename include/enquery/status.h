@@ -37,7 +37,8 @@ class Status {
 
   // Make error status with module, message strings and integer code.
   // The 'module' and 'message' arguments may be NULL.
-  static Status MakeError(const char* module, const char* message, errno_t code);
+  static Status MakeError(const char* module, const char* message,
+                          errno_t code);
 
   // Make error status constructed from an operating system error.
   // GetCode() will return the error, GetMessage() with the string that
