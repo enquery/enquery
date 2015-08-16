@@ -34,19 +34,15 @@ class Callback {
 // Container used by Future to store callbacks to be invoked when populated.
 class CallbackQueue {
  public:
-  CallbackQueue() { }
+  CallbackQueue() {}
 
-  ~CallbackQueue() {
-    Dispatch(false);
-  }
+  ~CallbackQueue() { Dispatch(false); }
 
   void Add(Callback* callback) { callbacks_.push_front(callback); }
 
   void Execute() { Dispatch(true); }
 
-  void swap(CallbackQueue& other) {
-    std::swap(callbacks_, other.callbacks_);
-  }
+  void swap(CallbackQueue& other) { std::swap(callbacks_, other.callbacks_); }
 
  private:
   CallbackQueue(const CallbackQueue& no_copy);
@@ -175,7 +171,7 @@ class SharedValue {
 template <typename T>
 class Future {
  public:
-  Future(const Future<T>& copy) : value_(copy.value_) { }  // NOLINT
+  Future(const Future<T>& copy) : value_(copy.value_) {}  // NOLINT
 
   Future<T>& operator=(const Future<T>& assign) {
     Future<T> tmp(assign);
@@ -183,7 +179,7 @@ class Future {
     return *this;
   }
 
-  ~Future() { }
+  ~Future() {}
 
   T GetValue() { return value_->Get(); }
 
@@ -205,11 +201,9 @@ class Future {
  private:
   template <typename U>
   friend class Promise;
-  Future(Shared::Ptr<SharedValue<T> > val) : value_(val) { }  // NOLINT
+  Future(Shared::Ptr<SharedValue<T> > val) : value_(val) {}  // NOLINT
 
-  void swap(Future<T>& other) {
-    std::swap(value_, other.value_);
-  }
+  void swap(Future<T>& other) { std::swap(value_, other.value_); }
 
   Shared::Ptr<SharedValue<T> > value_;
 };
@@ -220,7 +214,7 @@ class Promise {
  public:
   Promise() : value_(new SharedValue<T>()) {}
 
-  Promise(const Promise<T>& copy) : value_(copy.value_) { }  // NOLINT
+  Promise(const Promise<T>& copy) : value_(copy.value_) {}  // NOLINT
 
   Promise& operator=(const Promise<T>& assign) {
     Promise tmp(assign);
@@ -228,16 +222,14 @@ class Promise {
     return *this;
   }
 
-  ~Promise() { }
+  ~Promise() {}
 
   void SetValue(const T& val) { value_->Set(val); }
 
   Future<T> GetFuture() const { return Future<T>(value_); }
 
  private:
-  void swap(Promise<T>& other) {
-    std::swap(value_, other.value_);
-  }
+  void swap(Promise<T>& other) { std::swap(value_, other.value_); }
 
   Shared::Ptr<SharedValue<T> > value_;
 };
