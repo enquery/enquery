@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="enquery">
+      <UniqueIdentifier>{56d17821-f6ca-43c2-80e2-a52d5d641dce}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="enquery\atomic.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\buffer.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\executor_service.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\futures.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\shared.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\shared_pointer.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\slice.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\status.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\testing.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+    <ClInclude Include="enquery\portability.h">
+      <Filter>enquery</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

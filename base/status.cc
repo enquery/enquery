@@ -17,6 +17,7 @@
 #include <string.h>
 #include <string>
 #include <algorithm>
+#include "enquery/portability.h"
 
 namespace {
 // When constructing an error Status with MakeFromSystemError, the module
@@ -38,7 +39,7 @@ class Status::Rep {
  public:
   std::string module_;
   std::string message_;
-  int code_;
+  errno_t code_;
 
   Rep() : code_(0) {}
 };
@@ -67,7 +68,7 @@ Status Status::MakeError(const char* module, const char* msg) {
   return Status::MakeError(module, msg, 0);
 }
 
-Status Status::MakeError(const char* module, const char* msg, int code) {
+Status Status::MakeError(const char* module, const char* msg, errno_t code) {
   Rep* rep = new Rep();
 
   rep->module_ = module ? module : "";
@@ -77,24 +78,15 @@ Status Status::MakeError(const char* module, const char* msg, int code) {
   return Status(rep);
 }
 
-Status Status::MakeFromSystemError(int errorNum) {
+Status Status::MakeFromSystemError(errno_t errorNum) {
   Rep* rep = new Rep();
   rep->code_ = errorNum;
   rep->module_ = kModuleOS;
-
-  const size_t kMaxErrorLen = 256;
-  char tmp[kMaxErrorLen] = {0};
-#if (((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !_GNU_SOURCE) || \
-     __MACH__)
-  strerror_r(errorNum, tmp, kMaxErrorLen);
-  rep->message_ = tmp;
-#else
-  rep->message_ = strerror_r(errorNum, tmp, kMaxErrorLen);
-#endif
+  rep->message_ = SystemErrorToString(errorNum);
   return Status(rep);
 }
 
-int Status::GetCode() const {
+errno_t Status::GetCode() const {
   if (rep_) {
     return rep_->code_;
   }

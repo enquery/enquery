@@ -10,15 +10,30 @@ build_config.mk
 
 ## Object files
 *.o
+*.obj
 
 # Tests
 *_test
 
 # Targets
 libenquery.a
+*.lib
 demo
 
-# Stuff that sometimes exists on OSX
+## Stuff that sometimes exists on OSX
 .DS_Store
 */.DS_Store
 *.dSYM
+
+## MSVC stuff
+.\base\Debug
+.\base\Release
+.\include\Debug
+.\include\Release
+*.idb
+*.lastbuildstate
+*.log
+*.pdb
+*.sdf
+*.suo
+*.tlog

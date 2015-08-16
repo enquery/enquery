@@ -17,6 +17,7 @@
 #define INCLUDE_ENQUERY_STATUS_H_
 
 #include <stdlib.h>
+#include "enquery/portability.h"
 
 namespace enquery {
 
@@ -36,12 +37,12 @@ class Status {
 
   // Make error status with module, message strings and integer code.
   // The 'module' and 'message' arguments may be NULL.
-  static Status MakeError(const char* module, const char* message, int code);
+  static Status MakeError(const char* module, const char* message, errno_t code);
 
   // Make error status constructed from an operating system error.
   // GetCode() will return the error, GetMessage() with the string that
   // would result from a call to strerror_r.
-  static Status MakeFromSystemError(int errorNumber);
+  static Status MakeFromSystemError(errno_t errorNumber);
 
   // Return true iff the status indicates success.
   bool IsSuccess() const { return (rep_ == NULL); }
@@ -51,7 +52,7 @@ class Status {
 
   // Return the integer error code of the status object if one was set.
   // Returns zero if no error code was set, or if status represents success.
-  int GetCode() const;
+  errno_t GetCode() const;
 
   // Returns the name of the module that caused the error. For successful
   // status objects, returns a pointer to the empty string.
