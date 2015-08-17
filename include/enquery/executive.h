@@ -23,7 +23,7 @@ namespace enquery {
 class Task {
  public:
   virtual ~Task() {}
-  virtual void Invoke() = 0;
+  virtual void Run() = 0;
 };
 
 template <typename ReturnType, typename Func, typename A1>
@@ -31,7 +31,7 @@ class Task_1 : public Task {
  public:
   Task_1(Promise<ReturnType> promise, Func func, A1 arg1)
       : promise_(promise), func_(func), arg1_(arg1) {}
-  virtual void Invoke() { promise_.SetValue(func_(arg1_)); }
+  virtual void Run() { promise_.SetValue(func_(arg1_)); }
 
  private:
   Promise<ReturnType> promise_;
@@ -48,7 +48,7 @@ class ExecutionStrategy {
 class CurrentThreadExecutionStrategy : public ExecutionStrategy {
  public:
   virtual void Execute(Task* task) {
-    task->Invoke();
+    task->Run();
     delete task;
   }
 };
