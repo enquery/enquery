@@ -40,13 +40,13 @@ class Task_1 : public Task {
   A1 arg1_;
 };
 
-class ExecutionStrategy {
+class Execution {
  public:
-  virtual ~ExecutionStrategy() {}
+  virtual ~Execution() {}
   virtual void Execute(Task* task) = 0;
 };
 
-class CurrentThreadExecutionStrategy : public ExecutionStrategy {
+class CurrentThreadExecution : public Execution {
  public:
   virtual void Execute(Task* task) {
     task->Run();

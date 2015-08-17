@@ -20,7 +20,7 @@
 #include "enquery/executive.h"
 #include "enquery/testing.h"
 
-using ::enquery::CurrentThreadExecutionStrategy;
+using ::enquery::CurrentThreadExecution;
 using ::enquery::Executive;
 using ::enquery::Future;
 
@@ -29,7 +29,7 @@ int negate(int x) { return -x; }
 int main(int argc, char* argv[]) {
   const int input_value = 42;
 
-  Executive<CurrentThreadExecutionStrategy> executive;
+  Executive<CurrentThreadExecution> executive;
 
   Future<int> future_result = executive.Submit<int>(negate, input_value);
 
