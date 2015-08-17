@@ -17,11 +17,11 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "enquery/executor_service.h"
+#include "enquery/executive.h"
 #include "enquery/testing.h"
 
 using ::enquery::CurrentThreadExecutionStrategy;
-using ::enquery::ExecutorService;
+using ::enquery::Executive;
 using ::enquery::Future;
 
 int negate(int x) { return -x; }
@@ -29,9 +29,9 @@ int negate(int x) { return -x; }
 int main(int argc, char* argv[]) {
   const int input_value = 42;
 
-  ExecutorService<CurrentThreadExecutionStrategy> executor;
+  Executive<CurrentThreadExecutionStrategy> executive;
 
-  Future<int> future_result = executor.submit<int>(negate, input_value);
+  Future<int> future_result = executive.Submit<int>(negate, input_value);
 
   ASSERT_EQUALS(future_result.GetValue(), negate(input_value));
 

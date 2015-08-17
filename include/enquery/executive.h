@@ -13,8 +13,8 @@
 // limitations under the License. See the AUTHORS file for names of
 // contributors.
 
-#ifndef INCLUDE_ENQUERY_EXECUTOR_SERVICE_H_
-#define INCLUDE_ENQUERY_EXECUTOR_SERVICE_H_
+#ifndef INCLUDE_ENQUERY_EXECUTIVE_H_
+#define INCLUDE_ENQUERY_EXECUTIVE_H_
 
 #include "enquery/futures.h"
 
@@ -54,13 +54,12 @@ class CurrentThreadExecutionStrategy : public ExecutionStrategy {
 };
 
 template <typename ExecStrategy>
-class ExecutorService {
+class Executive {
  public:
-  explicit ExecutorService(ExecStrategy es = ExecStrategy())
-      : exec_strategy_(es) {}
+  explicit Executive(ExecStrategy es = ExecStrategy()) : exec_strategy_(es) {}
 
   template <typename ReturnType, typename Func, typename A1>
-  Future<ReturnType> submit(Func func, const A1& arg1) {
+  Future<ReturnType> Submit(Func func, const A1& arg1) {
     Promise<ReturnType> promise;
     Task* task = new Task_1<ReturnType, Func, A1>(promise, func, arg1);
     exec_strategy_.Execute(task);
@@ -73,4 +72,4 @@ class ExecutorService {
 
 }  // namespace enquery
 
-#endif  // INCLUDE_ENQUERY_EXECUTOR_SERVICE_H_
+#endif  // INCLUDE_ENQUERY_EXECUTIVE_H_
