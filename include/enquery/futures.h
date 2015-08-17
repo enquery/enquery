@@ -166,6 +166,8 @@ class SharedValue {
 template <typename T>
 class Future {
  public:
+  Future() : value_(NULL) {}
+
   Future(const Future<T>& copy) : value_(copy.value_) {}  // NOLINT
 
   Future<T>& operator=(const Future<T>& assign) {
@@ -175,6 +177,8 @@ class Future {
   }
 
   ~Future() {}
+
+  bool Valid() const { return (value_.get() != NULL); }
 
   T GetValue() { return value_->Get(); }
 

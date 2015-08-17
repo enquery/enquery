@@ -31,6 +31,7 @@ class Task_1 : public Task {
  public:
   Task_1(Promise<ReturnType> promise, Func func, A1 arg1)
       : promise_(promise), func_(func), arg1_(arg1) {}
+  virtual ~Task_1() {}
   virtual void Run() { promise_.SetValue(func_(arg1_)); }
 
  private:
