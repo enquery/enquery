@@ -13,29 +13,18 @@
 // limitations under the License. See the AUTHORS file for names of
 // contributors.
 
-#include <errno.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "enquery/executive.h"
-#include "enquery/testing.h"
+#ifndef INCLUDE_ENQUERY_UTILITY_H_
+#define INCLUDE_ENQUERY_UTILITY_H_
 
-using ::enquery::CurrentThreadExecution;
-using ::enquery::Executive;
-using ::enquery::Future;
+namespace enquery {
 
-int negate(int x) { return -x; }
-
-int main(int argc, char* argv[]) {
-  const int input_value = 42;
-
-  Executive* executive = Executive::Create(NULL, true);
-
-  Future<int> future_result = executive->Submit<int>(negate, input_value);
-
-  ASSERT_EQUALS(future_result.GetValue(), negate(input_value));
-
-  delete executive;
-
-  return EXIT_SUCCESS;
+template <typename Typ_>
+void MaybeAssign(Typ_* lhs, const Typ_& rhs) {
+  if (lhs) {
+    *lhs = rhs;
+  }
 }
+
+}  // namespace enquery
+
+#endif  // INCLUDE_ENQUERY_UTILITY_H_

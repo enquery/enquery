@@ -17,6 +17,9 @@
 #define INCLUDE_ENQUERY_EXECUTIVE_H_
 
 #include "enquery/futures.h"
+#include "enquery/shared.h"
+#include "enquery/status.h"
+#include "enquery/utility.h"
 
 namespace enquery {
 
@@ -54,21 +57,41 @@ class CurrentThreadExecution : public Execution {
   }
 };
 
-template <typename ExecStrategy>
 class Executive {
  public:
-  explicit Executive(ExecStrategy es = ExecStrategy()) : exec_strategy_(es) {}
+  // Construct Executive. If caller passes NULL, the default behavior
+  // of "current thread" execution is used, and take_ownership is
+  // ignored. Otherwise, the caller-provided execution method is used
+  // and the instance takes ownership of the pointer at the behest of
+  // the caller.
+  static Executive* Create(Execution* exec, bool take_ownership) {
+    return new Executive(exec, take_ownership);
+  }
+
+  ~Executive() {
+    if (take_ownership_) {
+      delete execution_;
+    }
+  }
 
   template <typename ReturnType, typename Func, typename A1>
   Future<ReturnType> Submit(Func func, const A1& arg1) {
     Promise<ReturnType> promise;
     Task* task = new Task_1<ReturnType, Func, A1>(promise, func, arg1);
-    exec_strategy_.Execute(task);
+    execution_->Execute(task);
     return promise.GetFuture();
   }
 
  private:
-  ExecStrategy exec_strategy_;
+  Executive(Execution* exec, bool take_ownership)
+      : execution_(exec ? exec : new CurrentThreadExecution()),
+        take_ownership_(exec ? take_ownership : true) {}
+
+  Executive(const Executive& no_copy);
+  Executive& operator=(const Executive& no_assign);
+
+  Execution* execution_;
+  bool take_ownership_;
 };
 
 }  // namespace enquery
