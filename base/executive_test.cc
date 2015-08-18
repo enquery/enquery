@@ -18,10 +18,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "enquery/executive.h"
+#include "enquery/status.h"
 #include "enquery/testing.h"
 
 using ::enquery::Executive;
 using ::enquery::Future;
+using ::enquery::Status;
 
 int negate(int x) { return -x; }
 
@@ -30,8 +32,9 @@ int main(int argc, char* argv[]) {
 
   Executive* executive = Executive::Create(NULL, true);
 
-  Future<int> future_result = executive->Submit<int>(negate, input_value);
-
+  Future<int> future_result;
+  Status status = executive->Submit<int>(negate, input_value, &future_result);
+  ASSERT_TRUE(status.IsSuccess());
   ASSERT_EQUALS(future_result.GetValue(), negate(input_value));
 
   delete executive;

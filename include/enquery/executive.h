@@ -46,14 +46,15 @@ class Task_1 : public Task {
 class Execution {
  public:
   virtual ~Execution() {}
-  virtual void Execute(Task* task) = 0;
+  virtual Status Execute(Task* task) = 0;
 };
 
 class CurrentThreadExecution : public Execution {
  public:
-  virtual void Execute(Task* task) {
+  virtual Status Execute(Task* task) {
     task->Run();
     delete task;
+    return Status::OK();
   }
 };
 
@@ -75,11 +76,15 @@ class Executive {
   }
 
   template <typename ReturnType, typename Func, typename A1>
-  Future<ReturnType> Submit(Func func, const A1& arg1) {
+  Status Submit(Func func, const A1& arg1, Future<ReturnType>* future) {
     Promise<ReturnType> promise;
     Task* task = new Task_1<ReturnType, Func, A1>(promise, func, arg1);
-    execution_->Execute(task);
-    return promise.GetFuture();
+    Status status = execution_->Execute(task);
+    if (status.IsFailure()) {
+      return status;
+    }
+    *future = promise.GetFuture();
+    return Status::OK();
   }
 
  private:
