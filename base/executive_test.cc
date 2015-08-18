@@ -20,7 +20,6 @@
 #include "enquery/executive.h"
 #include "enquery/testing.h"
 
-using ::enquery::CurrentThreadExecution;
 using ::enquery::Executive;
 using ::enquery::Future;
 
