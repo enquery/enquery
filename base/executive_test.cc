@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
   Executive* executive = Executive::Create(NULL, true);
 
   Future<int> future_result;
-  Status status = executive->Submit<int>(negate, input_value, &future_result);
+  Status status = executive->Submit(negate, input_value, &future_result);
   ASSERT_TRUE(status.IsSuccess());
   ASSERT_EQUALS(future_result.GetValue(), negate(input_value));
 
