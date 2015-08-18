@@ -17,23 +17,27 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "enquery/executor_service.h"
+#include "enquery/executive.h"
+#include "enquery/status.h"
 #include "enquery/testing.h"
 
-using ::enquery::CurrentThreadExecutionStrategy;
-using ::enquery::ExecutorService;
+using ::enquery::Executive;
 using ::enquery::Future;
+using ::enquery::Status;
 
 int negate(int x) { return -x; }
 
 int main(int argc, char* argv[]) {
   const int input_value = 42;
 
-  ExecutorService<CurrentThreadExecutionStrategy> executor;
+  Executive* executive = Executive::Create(NULL, true);
 
-  Future<int> future_result = executor.submit<int>(negate, input_value);
-
+  Future<int> future_result;
+  Status status = executive->Submit(negate, input_value, &future_result);
+  ASSERT_TRUE(status.IsSuccess());
   ASSERT_EQUALS(future_result.GetValue(), negate(input_value));
+
+  delete executive;
 
   return EXIT_SUCCESS;
 }

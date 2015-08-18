@@ -47,8 +47,12 @@ void Notify_2(int a, int b) {
 }  // anonymous namespace
 
 int main(int argc, char* argv[]) {
-  Promise<int> promise;
+  // Test ability to construct an empty future
+  Future<int> null_future;
+  ASSERT_EQUALS(null_future.Valid(), false);
 
+  // Test promise / future / notification
+  Promise<int> promise;
   Future<int> future = promise.GetFuture();
   future.Notify(Notify_0);
   future.Notify(Notify_1, k1_a);
@@ -60,6 +64,7 @@ int main(int argc, char* argv[]) {
   int value = future.GetValue();
   ASSERT_EQUALS(kTestValue, value);
 
+  // Ensure that notifications occurred
   ASSERT_EQUALS(n0, k0);
   ASSERT_EQUALS(n1_a, k1_a);
   ASSERT_EQUALS(n2_a, k2_a);
