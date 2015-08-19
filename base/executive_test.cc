@@ -37,14 +37,14 @@ namespace enquery {
 class Task;
 class FailingExecution : public Execution {
  public:
-  FailingExecution(bool* set_when_destroyed)
+  explicit FailingExecution(bool* set_when_destroyed)
       : set_when_destroyed_(set_when_destroyed) {
     *set_when_destroyed_ = false;
   }
 
   virtual ~FailingExecution() { *set_when_destroyed_ = true; }
 
-  virtual Status Execute(Task*) {
+  virtual Status Execute(Task*) {  // NOLINT
     return Status::MakeError("test", "failed to execute");
   }
 
@@ -86,6 +86,8 @@ void test_default_use() {
   delete executive;
 }
 
+// Test failing execution while simultaneously testing that the executive
+// properly cleans up its "execution method" when so configured.
 void test_failing_use_with_ownership() {
   const int input_value = 42;
 
@@ -104,6 +106,7 @@ void test_failing_use_with_ownership() {
   // Submit the task for execution, which should fail fail.
   Status status = executive->Submit(negate, input_value, &future_result);
   ASSERT_FALSE(status.IsSuccess());
+  ASSERT_FALSE(future_result.Valid());
 
   // Delete the executive.
   delete executive;
@@ -112,8 +115,20 @@ void test_failing_use_with_ownership() {
   ASSERT_TRUE(destroyed);
 }
 
+// Test that the executive does not delete the "execution method" when
+// so configured.
+void test_not_taking_ownership() {
+  bool destroyed = false;
+  Execution* exm = new enquery::FailingExecution(&destroyed);
+  Executive* executive = Executive::Create(exm, false);
+  delete executive;
+  ASSERT_FALSE(destroyed);
+  delete exm;
+}
+
 int main(int argc, char* argv[]) {
   test_default_use();
   test_failing_use_with_ownership();
+  test_not_taking_ownership();
   return EXIT_SUCCESS;
 }
