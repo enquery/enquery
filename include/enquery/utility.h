@@ -18,6 +18,7 @@
 
 namespace enquery {
 
+// TODO(tdial): Explain rationale
 template <typename Typ_>
 void MaybeAssign(Typ_* lhs, const Typ_& rhs) {
   if (lhs) {
