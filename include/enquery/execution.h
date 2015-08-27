@@ -13,19 +13,21 @@
 // limitations under the License. See the AUTHORS file for names of
 // contributors.
 
-#ifndef INCLUDE_ENQUERY_UTILITY_H_
-#define INCLUDE_ENQUERY_UTILITY_H_
+#ifndef INCLUDE_ENQUERY_EXECUTION_H_
+#define INCLUDE_ENQUERY_EXECUTION_H_
+
+#include "enquery/status.h"
 
 namespace enquery {
 
-// TODO(tdial): Explain rationale
-template <typename Typ_>
-void MaybeAssign(Typ_* lhs, const Typ_& rhs) {
-  if (lhs) {
-    *lhs = rhs;
-  }
-}
+class Task;
+
+class Execution {
+ public:
+  virtual ~Execution() {}
+  virtual Status Execute(Task* task) = 0;
+};
 
 }  // namespace enquery
 
-#endif  // INCLUDE_ENQUERY_UTILITY_H_
+#endif  // INCLUDE_ENQUERY_EXECUTION_H_

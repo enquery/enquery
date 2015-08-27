@@ -16,6 +16,7 @@
 #ifndef INCLUDE_ENQUERY_EXECUTIVE_H_
 #define INCLUDE_ENQUERY_EXECUTIVE_H_
 
+#include "enquery/execution.h"
 #include "enquery/futures.h"
 #include "enquery/shared.h"
 #include "enquery/status.h"
@@ -41,12 +42,6 @@ class Task_1 : public Task {
   Promise<ReturnType> promise_;
   Func func_;
   A1 arg1_;
-};
-
-class Execution {
- public:
-  virtual ~Execution() {}
-  virtual Status Execute(Task* task) = 0;
 };
 
 class CurrentThreadExecution : public Execution {
@@ -81,6 +76,7 @@ class Executive {
     Task* task = new Task_1<ReturnType, Func, A1>(promise, func, arg1);
     Status status = execution_->Execute(task);
     if (status.IsFailure()) {
+      delete task;
       return status;
     }
     *future = promise.GetFuture();
