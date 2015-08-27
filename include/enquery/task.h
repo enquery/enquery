@@ -13,27 +13,25 @@
 // limitations under the License. See the AUTHORS file for names of
 // contributors.
 
-#ifndef INCLUDE_ENQUERY_EXECUTION_H_
-#define INCLUDE_ENQUERY_EXECUTION_H_
-
-#include "enquery/status.h"
+#ifndef INCLUDE_ENQUERY_TASK_H_
+#define INCLUDE_ENQUERY_TASK_H_
 
 namespace enquery {
 
-class Task;
-
-// This abstract class provides an interface for scheduling task execution.
-// Subclasses implement particular execution strategies, such as "execution
-// on the current thread" or "execution on a pool of threads." A successful
-// call to the Execute() method guarantees that the Task will be Run()
-// once and subsequently deleted. If the call to Execute() fails, it is up
-// to the caller to delete the Task object.
-class Execution {
+// 'Task' is as an abstract interface that represents a single, runnable
+// task or function. Calls to the Run() method cause the subclass'
+// implementation run immediately on the current thread of execution,
+// blocking until complete. This interface is exposed publicly to
+// facilitate unit testing. At the present time, users of enquery should
+// not be sublcassing Task.
+class Task {
  public:
-  virtual ~Execution() {}
-  virtual Status Execute(Task* task) = 0;
+  virtual ~Task() {}
+
+  // Execute on the current thread, blocking until complete.
+  virtual void Run() = 0;
 };
 
 }  // namespace enquery
 
-#endif  // INCLUDE_ENQUERY_EXECUTION_H_
+#endif  // INCLUDE_ENQUERY_TASK_H_

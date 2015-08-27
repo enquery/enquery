@@ -20,15 +20,10 @@
 #include "enquery/futures.h"
 #include "enquery/shared.h"
 #include "enquery/status.h"
+#include "enquery/task.h"
 #include "enquery/utility.h"
 
 namespace enquery {
-
-class Task {
- public:
-  virtual ~Task() {}
-  virtual void Run() = 0;
-};
 
 template <typename ReturnType, typename Func, typename A1>
 class Task_1 : public Task {
