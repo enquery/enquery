@@ -61,7 +61,7 @@ void test_default_use() {
   const int input_value = 42;
 
   // Create an Executive with default options; pass NULL to use execute
-  // everything on the curren thread. The boolean parameter indicates
+  // everything on the current thread. The boolean parameter indicates
   // that Executive should own the 'Execution' object, however when
   // NULL is passed, the current thread executive is used, and the
   // Executive *always* owns that.
