@@ -62,7 +62,7 @@ void test_default_use() {
 
   // Create an Executive with default options: execute tasks on the
   // current thread.
-  Executive* executive = Executive::Create();
+  Executive* executive = Executive::Create(Executive::DefaultSettings());
 
   // Create an empty future, to be populated later via Submit()
   Future<int> future_result;

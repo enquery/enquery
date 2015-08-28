@@ -58,21 +58,23 @@ class Executive {
    public:
     Settings() : execution_(NULL), take_ownership_(false) {}
 
-    // Set / get the implementation of execution to use when running tasks.
+    // Set the Execution implementation to use for running tasks.
     Settings& set_execution(Execution* ex) {
       execution_ = ex;
       return *this;
     }
+
+    // Get the Execution implementation to use for running tasks.
     Execution* execution() const { return execution_; }
 
-    // Set / get whether the Execution instance should own the execution
-    // instance that was set. If execution left or set to the default of
-    // NULL, then the Executive will always create and take ownership of
-    // an instance of execution, and this setting will be ignored.
+    // Set whether the Executive instance should own the execution instance.
+    // There is a condition when this is ignored; see Executive for info.
     Settings& set_take_ownership(bool take) {
       take_ownership_ = take;
       return *this;
     }
+
+    // Get whether we intend Executive to own the execution instance.
     bool take_ownership() const { return take_ownership_; }
 
    private:
@@ -85,9 +87,13 @@ class Executive {
   // ignored. Otherwise, the caller-provided execution method is used
   // and the instance takes ownership of the pointer at the behest of
   // the caller.
-  static Executive* Create(const Settings& settings = Settings()) {
+  static Executive* Create(const Settings& settings) {
     return new Executive(settings.execution(), settings.take_ownership());
   }
+
+  // Syntax helper: makes it easy to Create() with default settings
+  // without requiring that Create() use a default argument.
+  static Executive::Settings DefaultSettings() { return Settings(); }
 
   ~Executive() {
     if (take_ownership_) {
@@ -95,6 +101,16 @@ class Executive {
     }
   }
 
+  // Submit a single-argument function call for execution. Returns a
+  // Future that may be used by the caller to obtain the return value.
+  // Actual executon is delegated to an implementation of the Execution
+  // abstract class. If default settings are used to construct the
+  // Executive, execution takes place on the current thread, and the
+  // call to Submit() will block until execution completes. If an
+  // alternative Execution instance is supplied, execution is scheduled
+  // to take place and may run on an alternate thread at some point in
+  // the future. If Submit() returns a failed Status, the function is
+  // guaranteed not to execute.
   template <typename ReturnType, typename Func, typename A1>
   Status Submit(Func func, const A1& arg1, Future<ReturnType>* future) {
     assert(future != NULL);
