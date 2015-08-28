@@ -60,12 +60,9 @@ int negate(int x) { return -x; }
 void test_default_use() {
   const int input_value = 42;
 
-  // Create an Executive with default options; pass NULL to use execute
-  // everything on the current thread. The boolean parameter indicates
-  // that Executive should own the 'Execution' object, however when
-  // NULL is passed, the current thread executive is used, and the
-  // Executive *always* owns that.
-  Executive* executive = Executive::Create(NULL, true);
+  // Create an Executive with default options: execute tasks on the
+  // current thread.
+  Executive* executive = Executive::Create();
 
   // Create an empty future, to be populated later via Submit()
   Future<int> future_result;
@@ -97,7 +94,10 @@ void test_failing_use_with_ownership() {
 
   // Create an executive that's configured to take ownership of
   // the execution method that's passed in.
-  Executive* executive = Executive::Create(exm, true);
+  Executive::Settings settings;
+  settings.set_execution(exm);
+  settings.set_take_ownership(true);
+  Executive* executive = Executive::Create(settings);
 
   // Create an empty future to hold the result.
   Future<int> future_result;
@@ -119,10 +119,23 @@ void test_failing_use_with_ownership() {
 // so configured.
 void test_not_taking_ownership() {
   bool destroyed = false;
+
+  // Create a "failing execution" instance
   Execution* exm = new enquery::FailingExecution(&destroyed);
-  Executive* executive = Executive::Create(exm, false);
+
+  // Create an executive that uses the failing execution method but does
+  // not take ownership of the instance.
+  Executive::Settings settings;
+  settings.set_execution(exm);
+  settings.set_take_ownership(false);
+  Executive* executive = Executive::Create(settings);
+
+  // Delete the executive
   delete executive;
+
+  // Assert that the execution instance was not destroyed.
   ASSERT_FALSE(destroyed);
+
   delete exm;
 }
 
