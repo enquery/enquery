@@ -16,19 +16,15 @@
 #ifndef INCLUDE_ENQUERY_EXECUTIVE_H_
 #define INCLUDE_ENQUERY_EXECUTIVE_H_
 
+#include <assert.h>
 #include "enquery/execution.h"
 #include "enquery/futures.h"
 #include "enquery/shared.h"
 #include "enquery/status.h"
+#include "enquery/task.h"
 #include "enquery/utility.h"
 
 namespace enquery {
-
-class Task {
- public:
-  virtual ~Task() {}
-  virtual void Run() = 0;
-};
 
 template <typename ReturnType, typename Func, typename A1>
 class Task_1 : public Task {
@@ -55,13 +51,42 @@ class CurrentThreadExecution : public Execution {
 
 class Executive {
  public:
+  // The Settings class is used to configure the Executive class; the user
+  // may specify options such as the execution method to use and whether
+  // the Executive should take ownership of the execution instance.
+  class Settings {
+   public:
+    Settings() : execution_(NULL), take_ownership_(false) {}
+
+    // Set / get the implementation of execution to use when running tasks.
+    Settings& set_execution(Execution* ex) {
+      execution_ = ex;
+      return *this;
+    }
+    Execution* execution() const { return execution_; }
+
+    // Set / get whether the Execution instance should own the execution
+    // instance that was set. If execution left or set to the default of
+    // NULL, then the Executive will always create and take ownership of
+    // an instance of execution, and this setting will be ignored.
+    Settings& set_take_ownership(bool take) {
+      take_ownership_ = take;
+      return *this;
+    }
+    bool take_ownership() const { return take_ownership_; }
+
+   private:
+    Execution* execution_;
+    bool take_ownership_;
+  };
+
   // Construct Executive. If caller passes NULL, the default behavior
   // of "current thread" execution is used, and take_ownership is
   // ignored. Otherwise, the caller-provided execution method is used
   // and the instance takes ownership of the pointer at the behest of
   // the caller.
-  static Executive* Create(Execution* exec, bool take_ownership) {
-    return new Executive(exec, take_ownership);
+  static Executive* Create(const Settings& settings = Settings()) {
+    return new Executive(settings.execution(), settings.take_ownership());
   }
 
   ~Executive() {
@@ -72,6 +97,7 @@ class Executive {
 
   template <typename ReturnType, typename Func, typename A1>
   Status Submit(Func func, const A1& arg1, Future<ReturnType>* future) {
+    assert(future != NULL);
     Promise<ReturnType> promise;
     Task* task = new Task_1<ReturnType, Func, A1>(promise, func, arg1);
     Status status = execution_->Execute(task);
