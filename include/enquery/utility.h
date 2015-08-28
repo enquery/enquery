@@ -18,7 +18,8 @@
 
 namespace enquery {
 
-// TODO(tdial): Explain rationale
+// Assign the value in the second argument 'rhs' to the value pointed to
+// by 'lhs'. If 'lhs' is NULL, the function has no effect.
 template <typename Typ_>
 void MaybeAssign(Typ_* lhs, const Typ_& rhs) {
   if (lhs) {

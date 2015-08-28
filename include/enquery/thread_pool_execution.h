@@ -23,23 +23,28 @@
 
 namespace enquery {
 
-class ThreadPoolExecution {
+class ThreadPoolExecution : public Execution {
  public:
   // Settings used to control creation of ThreadPoolExcution
   class Settings {
    public:
     // Create with reasonable defaults (thread count = 1)
-    Settings();
+    Settings() : thread_count_(1) {}
 
     // Set the number of threads to configure in the pool.
-    Settings& set_thread_count(int thread_count);
+    Settings& set_thread_count(int thread_count) {
+      thread_count_ = thread_count;
+      return *this;
+    }
 
     // Get the number of threads to configure in the pool.
-    int thread_count() const;
+    int thread_count() const { return thread_count_; }
 
    private:
     int thread_count_;
   };
+
+  virtual ~ThreadPoolExecution();
 
   // Create a thread pool with the specified settings.
   // Returns NULL in the event of an error and populates the caller's
