@@ -25,16 +25,6 @@
 #include "enquery/thread.h"
 #include "enquery/utility.h"
 
-// The ThreadPoolExecution class provides an implementation of Execution
-// that schedules Task objects to execute on a pool of threads. Each
-// instance owns a single TaskQueue and multiple Worker instances, all
-// of which share the TaskQueue. When a task is scheduled for execution,
-// it is placed onto the queue and executed by the first available Worker
-// thread.
-//
-// ThreadPoolExecution guarantees that all tasks that have been queued
-// will be executed prior to shutdown. This is
-
 namespace enquery {
 
 class ThreadPoolExecution::Rep : public Execution {
