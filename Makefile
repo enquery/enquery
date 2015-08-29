@@ -42,7 +42,7 @@ CXXFLAGS += -I. -I./include $(PLATFORM_CXXFLAGS) $(OPT) $(WARNINGFLAGS) $(FEATUR
 BASE_OBJECTS = $(BASE_FILES:.cc=.o)
 HTTP_OBJECTS = $(HTTP_FILES:.cc=.o)
 TESTS = atomic_test buffer_test executive_test futures_test \
-				shared_pointer_test shared_test status_test
+				shared_pointer_test shared_test status_test thread_pool_execution_test
 DEV = demo
 
 # Targets
@@ -113,6 +113,11 @@ shared_test: base/shared_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)
 
 status_test: base/status_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)
 	$(CXX) base/status_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS) $(LIBRARIES) -o $@ 
+
+thread_pool_execution_test: base/thread_pool_execution_test.o $(BASE_OBJECTS)  \
+	$(HTTP_OBJECTS)
+	$(CXX) base/thread_pool_execution_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)     \
+	$(LIBRARIES) -o $@ 
 
 # Suffix Rules
 .cc.o:

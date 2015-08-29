@@ -13,20 +13,28 @@
 // limitations under the License. See the AUTHORS file for names of
 // contributors.
 
-#ifndef INCLUDE_ENQUERY_UTILITY_H_
-#define INCLUDE_ENQUERY_UTILITY_H_
+#ifndef INCLUDE_ENQUERY_SCOPE_LOCK_H_
+#define INCLUDE_ENQUERY_SCOPE_LOCK_H_
+
+#include <pthread.h>
+
+// TODO(tdial): Transition to use a portable concept (e.g. std::lock_guard)
 
 namespace enquery {
 
-// Assign the value in the second argument 'rhs' to the value pointed to
-// by 'lhs'. If 'lhs' is NULL, the function has no effect.
-template <typename Typ_>
-void MaybeAssign(Typ_* lhs, const Typ_& rhs) {
-  if (lhs) {
-    *lhs = rhs;
-  }
-}
+// Acquire and hold a pthread_mutex for the lifetime of the object.
+class ScopeLock {
+ public:
+  explicit ScopeLock(pthread_mutex_t* mutex);
+  ~ScopeLock();
+
+ private:
+  ScopeLock(const ScopeLock& no_copy);
+  ScopeLock& operator=(const ScopeLock& no_assign);
+
+  pthread_mutex_t* mutex_;
+};
 
 }  // namespace enquery
 
-#endif  // INCLUDE_ENQUERY_UTILITY_H_
+#endif  // INCLUDE_ENQUERY_SCOPE_LOCK_H_
