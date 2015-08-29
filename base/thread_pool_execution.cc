@@ -16,10 +16,13 @@
 #include "enquery/thread_pool_execution.h"
 #include <assert.h>
 #include <pthread.h>
+#include <string.h>
 #include <deque>
+#include <vector>
 #include "enquery/scope_lock.h"
 #include "enquery/scope_pointer.h"
 #include "enquery/status.h"
+#include "enquery/thread.h"
 #include "enquery/utility.h"
 
 // The ThreadPoolExecution class provides an implementation of Execution
@@ -32,97 +35,174 @@
 // ThreadPoolExecution guarantees that all tasks that have been queued
 // will be executed prior to shutdown. This is
 
-namespace {
-
-using ::enquery::Task;
-
-// TaskQueue is a FIFO that's used internally by the thread pool to manage a
-// queue of pointers-to-Task to be executed by a pool of workers. It provides
-// little functionality over the deque that it wraps, save for the ability
-// to optionally delete left-over pointers that remain in the queue at the
-// time of destruction. TaskQueue has no provisions for thread safety, by
-// design; it is expected that the caller will protect calls to TaskQueue
-// via the approptiate synchronization method.
-
-class TaskQueue {
- public:
-  // Create a new task queue. If the caller wishes the TaskQueue to take
-  // ownership for deleting left over pointers upon destruction, she may opt
-  // in by setting take_ownership to 'true'.
-  // Otherwise, it is the caller's responsibility to clean up pointers to
-  // objects that were placed in, but not removed from the queue.
-  explicit TaskQueue(bool take_ownership) : take_ownership_(take_ownership) {}
-
-  ~TaskQueue() { MaybeCleanupItems(); }
-
-  // Add a task pointer to the queue.
-  void Add(Task* task) { tasks_.push_front(task); }
-
-  // Remove a task pointer from the queue. Returns NULL if the queue is empty.
-  Task* Remove() {
-    if (tasks_.size() == 0) {
-      return NULL;
-    }
-    Task* task = tasks_.back();
-    tasks_.pop_back();
-    return task;
-  }
-
-  // Return the number of items currently in queue.
-  size_t Size() const { return tasks_.size(); }
-
- private:
-  TaskQueue(const TaskQueue& no_copy);
-
-  TaskQueue& operator=(const TaskQueue& no_assign);
-
-  // If the caller specified to take ownership of the pointers, we delete
-  // any objects that are left in the queue upon destruction. Called only
-  // from the destructor.
-  void MaybeCleanupItems() {
-    if (!take_ownership_) {
-      return;
-    }
-    while (tasks_.size() > 0) {
-      Task* task = tasks_.back();
-      tasks_.pop_back();
-      delete task;
-    }
-  }
-
-  std::deque<Task*> tasks_;
-  bool take_ownership_;
-};
-
-}  // namespace
-
 namespace enquery {
 
 class ThreadPoolExecution::Rep : public Execution {
  public:
-  Rep() {}
+  Rep() : created_sync_(false), shutting_down_(false) {
+    memset(&mutex_, 0, sizeof(mutex_));
+    memset(&cond_, 0, sizeof(cond_));
+  }
 
-  virtual ~Rep() {}
+  virtual ~Rep() {
+    if (created_sync_) {
+      Shutdown();
+      pthread_cond_destroy(&cond_);
+      pthread_mutex_destroy(&mutex_);
+    }
+  }
 
+  // Initialize an instance. Only called from the Create() function of
+  // ThreadPoolExecution. If this fails, Create() always follows up with
+  // a delete.
   Status Init(const ThreadPoolExecution::Settings& settings) {
-    // TODO(tdial): Implement
-    return Status::MakeError("ThreadPoolExecution::Rep::Init",
-                             "not implemented");
+    const int thread_count = settings.thread_count();
+    if (thread_count < 1) {
+      return Status::MakeError("ThreadPoolExecution::Rep",
+                               "thread count must be positive");
+    }
+
+    int status = pthread_mutex_init(&mutex_, NULL);
+    if (status != 0) {
+      return Status::MakeFromSystemError(status);
+    }
+
+    status = pthread_cond_init(&cond_, NULL);
+    if (status != 0) {
+      pthread_mutex_destroy(&mutex_);
+      return Status::MakeFromSystemError(status);
+    }
+
+    // Record that we've created the core synchronization primitives used
+    // in the instance. This tells the destructor that it's OK to delete
+    // them. This solves a conundrum created by the fact that we're doing
+    // "two phase" construction.
+    created_sync_ = true;
+
+    for (int i = 0; i < thread_count; ++i) {
+      Status status;
+      Thread* thread = Thread::Create(ThreadFunction, this, &status);
+      if (!thread) {
+        return status;
+      }
+      threads_.push_back(thread);
+    }
+
+    return Status::OK();
   }
 
   Status Execute(Task* task) {
-    // TODO(tdial): Implement
-    return Status::MakeError("ThreadPoolExecution::Rep::Execute",
-                             "not implemented");
+    // Ensure the task is valid and report error otherwise.
+    assert(task != NULL);
+    if (task == NULL) {
+      return Status::MakeError("ThreadPoolExecution::Rep", "task was null");
+    }
+
+    // We must lock the mutex to safely determine whether we are still
+    // accepting task submissions. If we're being shut down, we will
+    // not accept any more tasks.
+    pthread_mutex_lock(&mutex_);
+
+    if (shutting_down_) {
+      pthread_mutex_unlock(&mutex_);
+      return Status::MakeError("ThreadPoolExecution::Rep", "shutting down");
+    }
+
+    // Enqueue the task, signal a waiting thread
+    tasks_.push_front(task);
+    pthread_cond_signal(&cond_);  // TODO(tdial): pthread_cond_broadcast() ?
+    pthread_mutex_unlock(&mutex_);
+
+    return Status::OK();
   }
 
   void Shutdown() {
-    // TODO(tdial): Implement
+    // First, check to see if we are already shutting down. This must
+    // be checked within the mutex. If we *are* in that process, then
+    // simply release the mutex and return.
+    pthread_mutex_lock(&mutex_);
+    if (shutting_down_) {
+      pthread_mutex_unlock(&mutex_);
+      return;
+    }
+
+    // While under protection of the mutex, change state to shutting down.
+    shutting_down_ = true;
+
+    // Unlock the mutex
+    pthread_mutex_unlock(&mutex_);
+
+    // Queue up NULL tasks for all threads.
+    const size_t thread_count = threads_.size();
+    for (size_t i = 0; i < thread_count; ++i) {
+      pthread_mutex_lock(&mutex_);
+      tasks_.push_front(NULL);
+      pthread_cond_signal(&cond_);
+      pthread_mutex_unlock(&mutex_);
+    }
+
+    // Loop through threads and delete them. This is safe because the
+    // destructor joins on the thread prior to exit. This means that
+    // we will not risk deleting resources that are being used by
+    // another thread.
+    for (size_t i = 0; i < thread_count; ++i) {
+      Thread* thread = threads_[i];
+      delete thread;
+    }
+
+    // Erase vector that records threads.
+    threads_.clear();
+    assert(tasks_.size() == 0);
   }
 
  private:
+  // Retrieve a task from the shared task queue.
+  Task* GetNextTask() {
+    Task* task = NULL;
+    pthread_mutex_lock(&mutex_);
+    while (tasks_.size() == 0) {
+      pthread_cond_wait(&cond_, &mutex_);
+    }
+    task = tasks_.back();
+    tasks_.pop_back();
+    pthread_mutex_unlock(&mutex_);
+    return task;
+  }
+
+  // Run in every thread; retrieve tasks forever, quitting only when a
+  // NULL task is encountered. NULL tasks are not allowed to be entered
+  // by clients, but are used internally as a shutdown signal. Because
+  // tasks are entered in FIFO fashion, this ensures that all tasks in
+  // the queue are processed prior to shutdown.
+  void* WorkerLoop() {
+    for (;;) {
+      Task* task = GetNextTask();
+      if (!task) {
+        break;
+      }
+      task->Run();
+      delete task;
+    }
+    return NULL;
+  }
+
+  // Worker threads run this function. At the time of thread creation, the
+  // 'this' pointer of the controlling Rep instance is passed as the thread
+  // argument. Here, we cast it back so that we may run the WorkerLoop()
+  // member function.
+  static void* ThreadFunction(void* arg) {
+    Rep* execution = reinterpret_cast<Rep*>(arg);
+    return execution->WorkerLoop();
+  }
+
   Rep(const Rep& no_copy);
   Rep& operator=(const Rep& no_assign);
+  pthread_mutex_t mutex_;
+  pthread_cond_t cond_;
+  std::vector<Thread*> threads_;
+  std::deque<Task*> tasks_;
+  bool created_sync_;
+  bool shutting_down_;
 };
 
 ThreadPoolExecution::ThreadPoolExecution(Rep* rep) : rep_(rep) {

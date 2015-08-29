@@ -80,9 +80,11 @@ Status Status::MakeError(const char* module, const char* msg, errno_t code) {
 
 Status Status::MakeFromSystemError(errno_t errorNum) {
   Rep* rep = new Rep();
-  rep->code_ = errorNum;
+
   rep->module_ = kModuleOS;
   rep->message_ = SystemErrorToString(errorNum);
+  rep->code_ = errorNum;
+
   return Status(rep);
 }
 
