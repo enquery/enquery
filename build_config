@@ -16,7 +16,7 @@
 
 # Detects the operating system we're compiling on and outputs a file 
 # specified by the first argument, which in turn gets read while 
-# processing Makefile.
+# processing the Makefile.
 
 OUTPUT=$1
 PREFIX=$2
