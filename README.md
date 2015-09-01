@@ -1,4 +1,3 @@
 # enquery
 
-Enquery is a C++ library that provides an easy-to-use interface to popular databases, including NoSQL databases.
-
+The goal of enquery is to provide an easy-to-use C++ API for communicating with popular databases (both relational and NoSQL.)
