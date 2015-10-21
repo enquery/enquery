@@ -20,7 +20,7 @@ namespace enquery {
 
 // 'Task' is as an abstract interface that represents a single, runnable
 // task or function. Calls to the Run() method cause the subclass'
-// implementation run immediately on the current thread of execution,
+// implementation to run immediately on the current thread of execution,
 // blocking until complete. This interface is exposed publicly to
 // facilitate unit testing. At the present time, users of enquery should
 // not be sublcassing Task.
