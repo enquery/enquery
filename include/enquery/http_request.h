@@ -23,10 +23,7 @@ namespace enquery {
 
 class HttpRequest {
  public:
-  typedef enum {
-    GET = 0,
-    PUT = 1
-  } Method;
+  typedef enum { GET = 0, PUT = 1 } Method;
 
   HttpRequest();
   ~HttpRequest();
