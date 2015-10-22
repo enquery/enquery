@@ -13,25 +13,17 @@
 // limitations under the License. See the AUTHORS file for names of
 // contributors.
 
-#ifndef INCLUDE_ENQUERY_TASK_H_
-#define INCLUDE_ENQUERY_TASK_H_
+#include "http/curl_http_response.h"
+#include "enquery/buffer.h"
 
 namespace enquery {
 
-// 'Task' is as an abstract interface that represents a single, runnable
-// task or function. Calls to the Run() method cause the subclass'
-// implementation to run immediately on the current thread of execution,
-// blocking until complete. This interface is exposed publicly to
-// facilitate unit testing. At the present time, users of enquery should
-// not be sublcassing Task.
-class Task {
- public:
-  virtual ~Task() {}
+CurlHttpResponse::CurlHttpResponse(Shared<Buffer>::Ptr body) : body_(body) {}
 
-  // Execute on the current thread, blocking until complete.
-  virtual void Run() = 0;
-};
+CurlHttpResponse::~CurlHttpResponse() {}
+
+const char* CurlHttpResponse::Body() const { return body_->Data(); }
+
+size_t CurlHttpResponse::BodySize() const { return body_->Size(); }
 
 }  // namespace enquery
-
-#endif  // INCLUDE_ENQUERY_TASK_H_

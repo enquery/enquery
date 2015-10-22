@@ -13,25 +13,34 @@
 // limitations under the License. See the AUTHORS file for names of
 // contributors.
 
-#ifndef INCLUDE_ENQUERY_TASK_H_
-#define INCLUDE_ENQUERY_TASK_H_
+#ifndef INCLUDE_ENQUERY_HTTP_H_
+#define INCLUDE_ENQUERY_HTTP_H_
+
+#include "enquery/shared.h"
+#include "enquery/status.h"
 
 namespace enquery {
 
-// 'Task' is as an abstract interface that represents a single, runnable
-// task or function. Calls to the Run() method cause the subclass'
-// implementation to run immediately on the current thread of execution,
-// blocking until complete. This interface is exposed publicly to
-// facilitate unit testing. At the present time, users of enquery should
-// not be sublcassing Task.
-class Task {
- public:
-  virtual ~Task() {}
+class HttpClient;
 
-  // Execute on the current thread, blocking until complete.
-  virtual void Run() = 0;
+class Http {
+ public:
+  virtual ~Http();
+
+  // Create an instance of the library.
+  static Http* Create(Status* status);
+
+  // Create an HTTP client
+  virtual HttpClient* CreateClient(Status* status) = 0;
+
+ protected:
+  Http();
+
+ private:
+  Http(const Http& no_copy);
+  Http& operator=(const Http& no_assign);
 };
 
 }  // namespace enquery
 
-#endif  // INCLUDE_ENQUERY_TASK_H_
+#endif  // INCLUDE_ENQUERY_HTTP_H_

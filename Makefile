@@ -41,8 +41,9 @@ include build_config.mk
 CXXFLAGS += -I. -I./include $(PLATFORM_CXXFLAGS) $(OPT) $(WARNINGFLAGS) $(FEATURES)
 BASE_OBJECTS = $(BASE_FILES:.cc=.o)
 HTTP_OBJECTS = $(HTTP_FILES:.cc=.o)
-TESTS = atomic_test buffer_test executive_test futures_test \
-				shared_pointer_test shared_test status_test thread_pool_execution_test
+TESTS = atomic_test buffer_test curl_http_test http_client_test http_test \
+				http_request_test executive_test futures_test shared_pointer_test \
+				shared_test status_test thread_pool_execution_test
 DEV = demo
 
 # Targets
@@ -94,6 +95,23 @@ atomic_test: base/atomic_test.o $(BASE_OBJECTS)                                \
 buffer_test: base/buffer_test.o $(BASE_OBJECTS)                                \
 	$(BASE_OBJECTS)
 	$(CXX) base/buffer_test.o $(BASE_OBJECTS)                                    \
+	$(LIBRARIES) -o $@
+
+curl_http_test: http/curl_http_test.o                                          \
+	$(BASE_OBJECTS) $(HTTP_OBJECTS)
+	$(CXX) http/curl_http_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)                 \
+	$(LIBRARIES) -o $@
+
+http_client_test: http/http_client_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)
+	$(CXX) http/http_client_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)               \
+	$(LIBRARIES) -o $@
+
+http_test: http/http_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)
+	$(CXX) http/http_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)                      \
+	$(LIBRARIES) -o $@
+
+http_request_test: http/http_request_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)
+	$(CXX) http/http_request_test.o $(BASE_OBJECTS) $(HTTP_OBJECTS)              \
 	$(LIBRARIES) -o $@
 
 executive_test: base/executive_test.o $(BASE_OBJECTS)
