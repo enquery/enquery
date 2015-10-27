@@ -54,9 +54,7 @@ HttpRequest& HttpRequest::set_content_type(const char* content_type) {
   return *this;
 }
 
-const char* HttpRequest::content_type() const {
-  return content_type_.c_str();
-}
+const char* HttpRequest::content_type() const { return content_type_.c_str(); }
 
 bool HttpRequest::HasBody() const { return (body_.Size() > 0); }
 
