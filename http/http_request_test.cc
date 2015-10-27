@@ -41,5 +41,10 @@ int main(int argc, char* argv[]) {
   request.set_uri(kTestUri);
   ASSERT_EQUALS(strcmp(kTestUri, request.uri()), 0);
 
+  // Content type
+  const char* kTestContentType = "text/plain";
+  request.set_content_type(kTestContentType);
+  ASSERT_EQUALS(strcmp(kTestContentType, request.content_type()), 0);
+
   return EXIT_SUCCESS;
 }

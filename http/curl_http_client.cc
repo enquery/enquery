@@ -33,7 +33,16 @@ using enquery::Slice;
 namespace {
 const char* const kCurlModule = "curl";
 
+// The curl_handle_deleter() function is used in conjunction with shared
+// pointers to provide RAII-style automatic cleanup for cURL handles.
 void curl_handle_deleter(CURL* curl) { curl_easy_cleanup(curl); }
+
+// The cURL library requires programmers to implement callbacks for providing
+// data in an HTTP request as well as receiving response data. The functions
+// are named from the point of view of the library. Thus, curl_read_buffer()
+// is called by the library to obtain data from the program to send in the
+// HTTP request. The curl_write_buffer() function is called to write response
+// data received from the server back to the program's buffer.
 
 size_t curl_read_buffer(char* data, size_t size, size_t nmemb, void* user) {
   assert(user != NULL);
@@ -64,18 +73,35 @@ size_t curl_write_buffer(char* data, size_t size, size_t nmemb, void* user) {
   return total_bytes;
 }
 
+// Return method name from the enumeration.
+const char* HttpMethodNameFromMethod(const enquery::HttpRequest::Method m) {
+  using enquery::HttpRequest;
+  switch (m) {
+    case HttpRequest::GET:
+      return "GET";
+    case HttpRequest::HEAD:
+      return "HEAD";
+    case HttpRequest::POST:
+      return "POST";
+    case HttpRequest::PUT:
+      return "PUT";
+    case HttpRequest::DELETE:
+      return "DELETE";
+    case HttpRequest::TRACE:
+      return "TRACE";
+    default:
+      return "NONE";
+  }
+}
+
 }  // namespace
 
 namespace enquery {
 
 CurlHttpClient::CurlHttpClient(Shared<void>::Ptr library_ref)
-    : library_ref_(library_ref) {
-  // TODO(tdial): Implement
-}
+    : library_ref_(library_ref) {}
 
-CurlHttpClient::~CurlHttpClient() {
-  // TODO(tdial): Implement
-}
+CurlHttpClient::~CurlHttpClient() {}
 
 HttpResponse* CurlHttpClient::SendRequest(const HttpRequest& request,
                                           Status* status_out) {
@@ -88,32 +114,34 @@ HttpResponse* CurlHttpClient::SendRequest(const HttpRequest& request,
     return NULL;
   }
 
-  CURLcode result;
+  CURLcode result = CURLE_OK;
 
   // Which method are we using?
   switch (request.method()) {
     case HttpRequest::GET:
-      // CURL uses GET by default, do nothing.
-      break;
-
-    case HttpRequest::HEAD:
+      // libcurl defaults to GET; do nothing.
       break;
 
     case HttpRequest::POST:
-      // Handle POST
       result = curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
-      if (result != 0) {
-        MaybeAssign(status_out,
-                    Status::MakeError(kCurlModule, curl_easy_strerror(result)));
-        return NULL;
-      }
       break;
+
     case HttpRequest::PUT:
+      result = curl_easy_setopt(curl.get(), CURLOPT_PUT, 1);
       break;
+
+    case HttpRequest::HEAD:
     case HttpRequest::DELETE:
-      break;
     case HttpRequest::TRACE:
+      result = curl_easy_setopt(curl.get(), CURLOPT_CUSTOMREQUEST,
+                                HttpMethodNameFromMethod(request.method()));
       break;
+  }
+
+  if (result != 0) {
+    MaybeAssign(status_out,
+                Status::MakeError(kCurlModule, curl_easy_strerror(result)));
+    return NULL;
   }
 
   // Set the URL to use for the request
