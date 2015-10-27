@@ -93,8 +93,8 @@ int main(int argc, char* argv[]) {
   ASSERT_TRUE(status.IsSuccess());
 
   // Run a series of tests with a matrix of thread/thread combinations
-  const int kMaxThreads = 8;
-  const int kMaxTasks = 100000;
+  const int kMaxThreads = 16;
+  const int kMaxTasks = 20000;
   const int kTaskStep = 10000;
   for (int threads = 1; threads <= kMaxThreads; ++threads) {
     for (int tasks = 0; tasks <= kMaxTasks; tasks += kTaskStep) {
