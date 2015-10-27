@@ -36,15 +36,10 @@ int main(int argc, char* argv[]) {
   request.set_method(HttpRequest::GET);
   ASSERT_EQUALS(request.method(), HttpRequest::GET);
 
-  // method (bogus: should still be GET from last set)
-  const int kBogusMethod = 17;
-  request.set_method(kBogusMethod);
-  ASSERT_EQUALS(request.method(), HttpRequest::GET);
-
-  // URL
-  const char* kTestUrl = "http://www.example.com";
-  request.set_url(kTestUrl);
-  ASSERT_EQUALS(strcmp(kTestUrl, request.url()), 0);
+  // URI
+  const char* kTestUri = "http://www.example.com";
+  request.set_uri(kTestUri);
+  ASSERT_EQUALS(strcmp(kTestUri, request.uri()), 0);
 
   return EXIT_SUCCESS;
 }

@@ -23,7 +23,14 @@ namespace enquery {
 
 class HttpRequest {
  public:
-  typedef enum { GET = 0, PUT = 1 } Method;
+  typedef enum Method {
+    GET = 0,
+    HEAD = 1,
+    POST = 2,
+    PUT = 3,
+    DELETE = 4,
+    TRACE = 5
+  } Method;
 
   HttpRequest();
   ~HttpRequest();
@@ -31,19 +38,25 @@ class HttpRequest {
   // Copy Constructor, Assignment, Destructor O.K.
 
   // Set request method (GET, PUT, etc,.)
-  HttpRequest& set_method(int method);
+  HttpRequest& set_method(Method method);
 
   // Return request method.
-  int method() const;
+  Method method() const;
 
-  // Set Request URL.
-  HttpRequest& set_url(const char* url);
+  // Set Request URI.
+  HttpRequest& set_uri(const char* uri);
 
-  // Get Request URL.
-  const char* url() const;
+  // Get Request URI.
+  const char* uri() const;
 
   // Set body data (typically POST data)
   HttpRequest& set_body(const char* data, size_t size);
+
+  // Set the content type.
+  HttpRequest& set_content_type(const char* content_type);
+
+  // Get the content type.
+  const char* content_type() const;
 
   bool HasBody() const;
 
@@ -51,9 +64,10 @@ class HttpRequest {
   const Buffer& body() const;
 
  private:
-  int method_;
-  std::string url_;
+  Method method_;
+  std::string uri_;
   Buffer body_;
+  std::string content_type_;
 };
 
 }  // namespace enquery

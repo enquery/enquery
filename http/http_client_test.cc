@@ -45,8 +45,7 @@ int main(int argc, char* argv[]) {
   // the internet, nor should we assume that a local web server is running.
   // Should probably build a simple HTTP server to satisfy this unit test.
 
-  request.set_url("http://www.example.com");
-  // request.set_url("http://127.0.0.1");
+  request.set_uri("http://www.example.com");
 
   Shared<HttpResponse>::Ptr response(client->SendRequest(request, &status));
   ASSERT_TRUE(status.IsSuccess());

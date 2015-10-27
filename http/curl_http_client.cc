@@ -88,9 +88,36 @@ HttpResponse* CurlHttpClient::SendRequest(const HttpRequest& request,
     return NULL;
   }
 
-  // Set the URL to use for the request
   CURLcode result;
-  result = curl_easy_setopt(curl.get(), CURLOPT_URL, request.url());
+
+  // Which method are we using?
+  switch (request.method()) {
+    case HttpRequest::GET:
+      // CURL uses GET by default, do nothing.
+      break;
+
+    case HttpRequest::HEAD:
+      break;
+
+    case HttpRequest::POST:
+      // Handle POST
+      result = curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
+      if (result != 0) {
+        MaybeAssign(status_out,
+                    Status::MakeError(kCurlModule, curl_easy_strerror(result)));
+        return NULL;
+      }
+      break;
+    case HttpRequest::PUT:
+      break;
+    case HttpRequest::DELETE:
+      break;
+    case HttpRequest::TRACE:
+      break;
+  }
+
+  // Set the URL to use for the request
+  result = curl_easy_setopt(curl.get(), CURLOPT_URL, request.uri());
   if (result != 0) {
     MaybeAssign(status_out,
                 Status::MakeError(kCurlModule, curl_easy_strerror(result)));

@@ -21,24 +21,28 @@ HttpRequest::HttpRequest() : method_(HttpRequest::GET) {}
 
 HttpRequest::~HttpRequest() {}
 
-HttpRequest& HttpRequest::set_method(int method) {
+HttpRequest& HttpRequest::set_method(Method method) {
   switch (method) {
     case HttpRequest::GET:
+    case HttpRequest::HEAD:
+    case HttpRequest::POST:
     case HttpRequest::PUT:
+    case HttpRequest::DELETE:
+    case HttpRequest::TRACE:
       method_ = method;
       break;
   }
   return *this;
 }
 
-int HttpRequest::method() const { return method_; }
+HttpRequest::Method HttpRequest::method() const { return method_; }
 
-HttpRequest& HttpRequest::set_url(const char* url) {
-  url_ = url ? url : "";
+HttpRequest& HttpRequest::set_uri(const char* uri) {
+  uri_ = uri ? uri : "";
   return *this;
 }
 
-const char* HttpRequest::url() const { return url_.c_str(); }
+const char* HttpRequest::uri() const { return uri_.c_str(); }
 
 // Set body data (typically POST data)
 HttpRequest& HttpRequest::set_body(const char* data, size_t size) {
