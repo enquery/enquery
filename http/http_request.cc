@@ -44,15 +44,22 @@ HttpRequest& HttpRequest::set_uri(const char* uri) {
 
 const char* HttpRequest::uri() const { return uri_.c_str(); }
 
-// Set body data (typically POST data)
 HttpRequest& HttpRequest::set_body(const char* data, size_t size) {
   body_ = Buffer(data, size);
   return *this;
 }
 
+HttpRequest& HttpRequest::set_content_type(const char* content_type) {
+  content_type_ = content_type;
+  return *this;
+}
+
+const char* HttpRequest::content_type() const {
+  return content_type_.c_str();
+}
+
 bool HttpRequest::HasBody() const { return (body_.Size() > 0); }
 
-// Get body data
 const Buffer& HttpRequest::body() const { return body_; }
 
 }  // namespace enquery
